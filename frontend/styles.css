@@ -1,0 +1,65 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "BBH Sans Bogle", "DM Sans", sans-serif;
+}
+
+h1 {
+  font-family: "BBH Sans Bogle", sans-serif;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a,
+li {
+  font-family: "DM Sans", sans-serif;
+  font-weight: 800;
+}
+
+.banner {
+  margin-top: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.banner img {
+  max-width: 100%;
+  height: 30vh;
+  width: 80vh;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.order-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 600px;
+}
+
+.order-form h1 {
+  position: relative;
+  display: block;
+  width: calc(
+    100vw - 96px
+  ); /* lebar mendekati full screen, sisakan margin supaya border-radius terlihat */
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0 0 18px;
+  padding: 14px 20px;
+  background: linear-gradient(90deg, #b25f2e 0%, #8b4513 100%);
+  color: #fff;
+  text-align: center;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(139, 69, 19, 0.12);
+  z-index: 2;
+  max-width: none;
+}

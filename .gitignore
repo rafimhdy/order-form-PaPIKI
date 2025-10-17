@@ -1,0 +1,59 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Build output
+dist/
+build/
+frontend/build/
+frontend/dist/
+
+# Backend local data / DB
+backend/data/
+backend/*.db
+backend/*.sqlite
+
+# Frontend deps (if you keep a separate frontend folder)
+frontend/node_modules/
+
+# Coverage & test
+coverage/
+*.lcov
+
+# Misc
+*.tgz
+*.gz
+*.zip
+
+# Lockfiles you don't want (optional)
+# yarn.lock
+# package-lock.json
+
+# Keep track of large media separately (optional)
+# assets/*.jpg
+# assets/*.png
