@@ -1,0 +1,251 @@
+body {
+  font-family: "BBH Sans Bogle", "Rubik", sans-serif;
+}
+
+h1 {
+  font-family: "BBH Sans Bogle", sans-serif;
+  font-size: 2.5rem;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a,
+li {
+  font-family: "Rubik", sans-serif;
+}
+
+.banner {
+  margin-top: 10vh;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  position: relative; /* allow absolutely positioned overlay */
+}
+
+/* offset page content so fixed header doesn't cover it */
+.page {
+  padding-top: var(--header-height);
+}
+
+@media (max-width: 540px) {
+  /* add tiny extra offset on mobile so fixed header (and any larger logo) doesn't overlap content */
+  .page {
+    padding-top: calc(var(--header-height) + 0.4rem);
+  }
+}
+
+.banner__inner {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden; /* clip overlay inside the rounded image */
+  /* use aspect-ratio so the container height follows its width and the overlay can center reliably */
+  aspect-ratio: 4 / 1; /* matches previous 800x200 default */
+}
+
+.banner__inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Banner overlay text (left-center) */
+.banner__overlay {
+  position: absolute;
+  left: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  color: #ffffff;
+  font-family: "BBH Sans Bogle", "Rubik", sans-serif;
+  font-size: 3.5rem; /* requested size */
+  line-height: 1;
+  font-weight: 700;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 980px) {
+  .banner__inner {
+    aspect-ratio: 3.6 / 1; /* a touch taller on medium screens */
+  }
+  .banner__overlay {
+    font-size: 2.8rem;
+    left: 6%;
+    max-width: 70%;
+  }
+}
+
+@media (max-width: 540px) {
+  .banner__inner {
+    aspect-ratio: 3 / 1; /* taller banner on small screens so text aligns better with the subject */
+  }
+  .banner__overlay {
+    font-size: 2.2rem; /* larger on mobile */
+    left: 5%;
+    max-width: 70%;
+    white-space: normal; /* allow wrapping on small screens */
+  }
+}
+
+.order-form {
+  width: 100%;
+  max-width: 640px;
+  margin: 20px auto;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-form h1 {
+  margin: 0 0 8px 0;
+  padding: 12px 18px;
+  background-color: #264940;
+  color: #f3ffee;
+  text-align: center;
+  border-radius: 10px;
+}
+
+.order-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-form label {
+  font-size: 14px;
+  color: #444;
+}
+
+.order-form input {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e6e2de;
+  font-size: 15px;
+  background: #fff;
+  font-family: "Rubik", sans-serif;
+  box-shadow: 0 6px 18px rgba(34, 50, 40, 0.04);
+  transition: box-shadow 0.18s, border-color 0.18s, transform 0.12s;
+}
+
+/* wrapper used to position a custom arrow for the native select control */
+.select-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.select-wrapper::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23264940'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-size: 18px 18px;
+  opacity: 0.95;
+}
+
+.order-form select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 12px 44px 12px 12px; /* room for arrow */
+  border-radius: 12px;
+  border: 1px solid #e6e2de;
+  font-size: 15px;
+  background: #fff;
+  font-family: "Rubik", sans-serif;
+  width: 100%;
+  box-shadow: 0 6px 18px rgba(34, 50, 40, 0.04);
+  transition: box-shadow 0.18s, border-color 0.18s, transform 0.12s;
+}
+
+.order-form select:focus,
+.order-form select:focus-visible {
+  outline: none;
+  border-color: #264940;
+  box-shadow: 0 8px 26px rgba(38, 73, 64, 0.1);
+}
+
+.order-form select:hover {
+  transform: translateY(-1px);
+}
+
+.order-form select option {
+  font-family: "Rubik", sans-serif;
+  padding: 8px 12px;
+}
+
+.order-form button {
+  margin: 6px auto 0 auto;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: #264940;
+  color: #f3ffee;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Rubik", sans-serif;
+  width: auto;
+  max-width: 20vh;
+}
+
+.order-form button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .banner__inner {
+    aspect-ratio: 2.8 / 1; /* slightly taller on very small screens */
+  }
+  .order-form {
+    padding: 16px;
+  }
+}
+
+.order-form select option {
+  font-family: "Rubik", sans-serif;
+}
+
+.list-menu button {
+  margin: 6px auto 0 auto;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: crimson;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Rubik", sans-serif;
+  width: auto;
+  max-width: 30vh;
+}
+
+.list-menu button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+@media screen and (max-width: 1150px) {
+  .banner {
+    margin-top: 4vh;
+  }
+}

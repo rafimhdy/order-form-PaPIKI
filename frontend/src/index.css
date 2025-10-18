@@ -1,0 +1,18 @@
+:root {
+  --header-height: 3.5rem; /* used by layout to offset fixed header */
+}
+
+body {
+  font-family: "BBH Sans Bogle", "Rubik", sans-serif;
+  background-color: #fff;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}

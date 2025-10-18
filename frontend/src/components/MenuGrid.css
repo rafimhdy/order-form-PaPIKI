@@ -1,0 +1,148 @@
+/* Menu grid wrapper */
+.menu-grid-wrapper {
+  width: 100%;
+  max-width: 1120px;
+  margin: 22px auto;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.menu-grid__header {
+  text-align: left;
+  margin-top: 7vh;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.menu-grid__header h2 {
+  margin: 0 0 6px;
+  font-family: "BBH Sans Bogle", sans-serif;
+  font-size: 3rem; /* slightly smaller for better mobile fit */
+}
+.menu-grid__header p {
+  margin: 0;
+  color: #444;
+  margin-bottom: 5vh;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr;
+  /* explicit row heights so the tall left card has room (prevents collapse to tiny strip) */
+  grid-template-rows: 320px 320px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.menu-card {
+  border-radius: 14px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  transition: transform 0.28s ease;
+  min-height: 140px; /* ensure a visible height even if images fail to load */
+}
+
+.menu-card__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* layout positions (left tall + four right squares) */
+.menu-card--1 {
+  grid-area: 1 / 1 / 3 / 2;
+}
+.menu-card--2 {
+  grid-area: 1 / 2 / 2 / 3;
+}
+.menu-card--3 {
+  grid-area: 1 / 3 / 2 / 4;
+}
+.menu-card--4 {
+  grid-area: 2 / 2 / 3 / 3;
+}
+.menu-card--5 {
+  grid-area: 2 / 3 / 3 / 4;
+}
+
+.menu-card:hover {
+  transform: translateY(-6px);
+}
+
+.menu-grid__cta-wrap {
+  margin-top: 14px;
+  text-align: center;
+}
+.menu-grid__cta {
+  margin: 6px auto 0 auto;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: #264940;
+  color: #f3ffee;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Rubik", sans-serif;
+  width: auto;
+  max-width: 30vh;
+}
+
+@media (max-width: 980px) {
+  /* stack cards vertically using normal flow to guarantee 1 column × N rows */
+  .menu-grid {
+    display: block;
+  }
+  /* ensure cards are full width and spaced */
+  .menu-card {
+    width: 100%;
+    height: 140px;
+    margin-bottom: 12px;
+  }
+  .menu-card--1,
+  .menu-card--2,
+  .menu-card--3,
+  .menu-card--4,
+  .menu-card--5 {
+    grid-area: unset !important;
+  }
+  .menu-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 540px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  /* slightly smaller uniform height on very small screens */
+  .menu-card {
+    height: 120px;
+  }
+  .menu-card__img {
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .menu-grid__header {
+    text-align: center;
+    margin-top: 7vh;
+  }
+
+  .menu-grid__header h2 {
+    font-size: 3rem;
+  }
+
+  .menu-grid__header p {
+    margin-bottom: 5vh;
+  }
+
+  .menu-grid__cta-wrap {
+    margin-top: 8px;
+    margin-bottom: 10vh;
+  }
+}

@@ -1,0 +1,40 @@
+.site-footer {
+  margin-top: 28px;
+  padding: 2rem 1rem;
+  border-top: 1px solid #e6e2de;
+  background: linear-gradient(180deg, rgba(38, 73, 64, 0.03), transparent);
+  color: #264940;
+  box-sizing: border-box;
+}
+
+.site-footer__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.site-footer__quote {
+  margin: 0;
+  font-style: italic;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: #2d5747;
+  font-family: "Rubik", sans-serif;
+}
+
+.site-footer__author {
+  margin-top: 0.6rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #264940;
+  font-family: "Rubik", sans-serif;
+}
+
+@media (max-width: 540px) {
+  .site-footer {
+    padding: 1.25rem 0.75rem;
+  }
+  .site-footer__quote {
+    font-size: 1rem;
+  }
+}

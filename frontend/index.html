@@ -2,77 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pemesanan Kopi</title>
+    <title>frontend</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=BBH+Sans+Bogle&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+      href="https://fonts.googleapis.com/css2?family=BBH+Sans+Bogle&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <!-- Remixicon for navbar icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css"
+    />
   </head>
   <body>
-    <div class="container">
-      <div class="banner">
-        <img src="assets/banner.jpg" alt="Banner Kopi" />
-      </div>
-
-      <div class="order-form">
-        <h1>Form Pemesanan Kopi</h1>
-        <form action="/submit-order" method="POST">
-          <label for="name">Nama:</label><br />
-          <input type="text" id="name" name="name" required /><br /><br />
-
-          <label for="coffee-type">Jenis Kopi:</label><br />
-          <select id="coffee-type" name="coffee-type" required>
-            <option value="espresso">Espresso</option>
-            <option value="latte">Latte</option>
-            <option value="cappuccino">Cappuccino</option>
-            <option value="americano">Americano</option></select
-          ><br /><br />
-
-          <label for="quantity">Jumlah:</label><br />
-          <input
-            type="number"
-            id="quantity"
-            name="quantity"
-            min="1"
-            required
-          /><br /><br />
-
-          <input type="submit" value="Pesan Sekarang" />
-        </form>
-      </div>
-    </div>
-    <script>
-      const form = document.querySelector("form");
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const data = {
-          name: document.getElementById("name").value,
-          coffee_type:
-            document.getElementById("coffee-type")?.value || "espresso",
-          size: document.getElementById("size")?.value || null,
-          quantity: Number(document.getElementById("quantity").value) || 1,
-        };
-        try {
-          const res = await fetch("http://localhost:4000/api/orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          });
-          const json = await res.json();
-          if (json.success) {
-            alert("Pesanan terkirim (id: " + json.id + ")");
-            form.reset();
-          } else {
-            alert("Error: " + (json.error || "unknown"));
-          }
-        } catch (err) {
-          alert("Gagal kirim: " + err.message);
-        }
-      });
-    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
