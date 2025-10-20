@@ -37,7 +37,12 @@ export default function MenuGrid({
     <section className="menu-grid-wrapper">
       <header className="menu-grid__header">
         <h2>Menu Pilihan Kami!</h2>
-        <p>Nikmati berbagai pilihan kopi terbaik kami.</p>
+        <p>
+          Nikmati berbagai pilihan kopi terbaik kami
+          <br />
+          Kami mendapatkan biji kopi dari salah satu coffee shop terbaik di
+          Bandung (1612 Coffee)
+        </p>
       </header>
 
       <section className="menu-grid" aria-label="Menu list">

@@ -33,7 +33,11 @@ export default function NavBar() {
         <div className={`nav__menu ${open ? "show-menu" : ""}`} id="nav-menu">
           <ul className="nav__list">
             <li className="nav__item">
-              <a href="#" className="nav__link" onClick={() => setOpen(false)}>
+              <a
+                href="https://papiki.org"
+                className="nav__link"
+                onClick={() => setOpen(false)}
+              >
                 <i className="ri-arrow-right-up-line"></i>
                 <span>Home</span>
               </a>
@@ -73,19 +77,20 @@ export default function NavBar() {
             </a>
 
             <a
-              href="https://wa.me/6281218007819"
-              target="_blank"
-              rel="noreferrer"
+              href="#admin"
               className="nav__social-link"
-            >
-              <i className="ri-whatsapp-line"></i>
-            </a>
-
-            <a
-              href="#"
-              target="_blank"
-              rel="noreferrer"
-              className="nav__social-link"
+              onClick={() => {
+                // close mobile menu first, then ensure hash changes
+                setOpen(false);
+                // small timeout to avoid any interference from menu close handlers
+                setTimeout(() => {
+                  try {
+                    window.location.hash = "#admin";
+                  } catch {
+                    /* ignore */
+                  }
+                }, 0);
+              }}
             >
               <i className="ri-account-circle-line"></i>
             </a>

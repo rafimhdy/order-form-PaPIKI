@@ -16,18 +16,18 @@
 .menu-grid__header h2 {
   margin: 0 0 6px;
   font-family: "BBH Sans Bogle", sans-serif;
-  font-size: 3rem; /* slightly smaller for better mobile fit */
+  font-size: 3rem;
 }
 .menu-grid__header p {
   margin: 0;
   color: #444;
   margin-bottom: 5vh;
+  line-height: 2;
 }
 
 .menu-grid {
   display: grid;
   grid-template-columns: 1.6fr 1fr 1fr;
-  /* explicit row heights so the tall left card has room (prevents collapse to tiny strip) */
   grid-template-rows: 320px 320px;
   gap: 18px;
   align-items: stretch;

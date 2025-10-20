@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import NavBar from "./components/NavBar";
+import AdminDashboard from "./components/AdminDashboard";
 import MenuGrid from "./components/MenuGrid";
+import ProductSelect from "./components/ProductSelect";
 import Footer from "./components/Footer";
 
 export default function App() {
   const [name, setName] = useState("");
-  const [coffeeType, setCoffeeType] = useState("espresso");
+  const [coffeeType, setCoffeeType] = useState("robusta");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,14 +26,36 @@ export default function App() {
           quantity: Number(quantity) || 1,
         }),
       });
-      const json = await res.json();
+
+      // Some servers/dev setups may return an empty body or non-JSON on error.
+      const text = await res.text();
+      let json;
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        console.error("Non-JSON response from /api/orders:", text);
+        json = {};
+      }
+
       if (res.ok && json.success) {
         alert("Pesanan terkirim (id: " + json.id + ")");
         setName("");
-        setCoffeeType("espresso");
+        setCoffeeType("robusta");
         setQuantity(1);
       } else {
-        alert("Error: " + (json.error || JSON.stringify(json)));
+        // Prefer structured validation details when provided by server
+        if (
+          json &&
+          json.error === "ValidationError" &&
+          Array.isArray(json.details)
+        ) {
+          const details = json.details
+            .map((d) => `${d.path}: ${d.message}`)
+            .join("\n");
+          alert("Validation error:\n" + details);
+        } else {
+          alert("Error: " + (json.error || text || JSON.stringify(json)));
+        }
       }
     } catch (err) {
       alert("Gagal kirim: " + err.message);
@@ -38,6 +63,77 @@ export default function App() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!mounted) return;
+        setProducts(Array.isArray(json) ? json : []);
+      } catch (err) {
+        // ignore — fallback price will be used
+        console.warn(
+          "Failed to load products for price lookup",
+          err && err.message
+        );
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  function getPriceForType(type) {
+    if (!type) return 10000;
+    // try find by slug first, then by normalized name
+    const slug = String(type).trim().toLowerCase();
+    let p = products.find((x) => x.slug === slug);
+    if (!p) {
+      p = products.find(
+        (x) => (x.name || "").toLowerCase().replace(/\s+/g, "") === slug
+      );
+    }
+    return (p && Number(p.price)) || 10000;
+  }
+
+  const [isAdmin, setIsAdmin] = useState(() =>
+    window.location.hash.startsWith("#admin")
+  );
+
+  useEffect(() => {
+    const onHash = () => {
+      const show =
+        window.location.hash && window.location.hash.startsWith("#admin");
+      console.debug(
+        "[App] hashchange ->",
+        window.location.hash,
+        "showAdmin=",
+        show
+      );
+      setIsAdmin(show);
+    };
+    window.addEventListener("hashchange", onHash);
+    // also listen for popstate in case history API was used
+    window.addEventListener("popstate", onHash);
+    // run once in case the hash was set programmatically before listener attached
+    onHash();
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      window.removeEventListener("popstate", onHash);
+    };
+  }, []);
+
+  if (isAdmin) {
+    return (
+      <>
+        <NavBar />
+        <AdminDashboard />
+      </>
+    );
+  }
 
   return (
     <>
@@ -61,18 +157,11 @@ export default function App() {
             />
 
             <label>Jenis Kopi:</label>
-            <select
+            <ProductSelect
+              products={products}
               value={coffeeType}
-              onChange={(e) => setCoffeeType(e.target.value)}
-            >
-              <option value="robusta">Robusta</option>
-              <option value="arabikanatural">Arabika Natural</option>
-              <option value="arabikaeksperimental">
-                Arabika Eksperimental
-              </option>
-              <option value="arabikahoney">Arabika Honey</option>
-              <option value="arabikafullwash">Arabika Full Wash</option>
-            </select>
+              onChange={setCoffeeType}
+            />
 
             <label>Jumlah:</label>
             <input
@@ -82,6 +171,19 @@ export default function App() {
               onChange={(e) => setQuantity(e.target.value)}
               required
             />
+
+            <div style={{ marginTop: 12, marginBottom: 12 }}>
+              <div style={{ fontSize: 14, color: "#444" }}>
+                Harga per item: Rp{" "}
+                {getPriceForType(coffeeType).toLocaleString("id-ID")}
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>
+                Total: Rp{" "}
+                {(
+                  getPriceForType(coffeeType) * (Number(quantity) || 1)
+                ).toLocaleString("id-ID")}
+              </div>
+            </div>
 
             <button type="submit" disabled={loading}>
               {loading ? "Mengirim..." : "Pesan Sekarang"}

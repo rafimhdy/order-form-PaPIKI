@@ -20,7 +20,6 @@ li {
 }
 
 .banner {
-  margin-top: 10vh;
   padding: 20px;
   text-align: center;
   display: flex;
@@ -225,6 +224,100 @@ li {
   font-family: "Rubik", sans-serif;
 }
 
+/* ProductSelect custom dropdown */
+.product-select {
+  position: relative;
+}
+.product-select__button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e6e2de;
+  background: #fff;
+  width: 100%;
+}
+/* override rules applied to generic .order-form button so product select is full width */
+.order-form .product-select__button {
+  margin: 0; /* remove auto centering from generic form buttons */
+  max-width: none;
+  width: 100%;
+  background: #264940;
+  box-shadow: 0 6px 18px rgba(34, 50, 40, 0.04);
+}
+.product-select {
+  position: relative;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+.product-select__button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e6e2de;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "Rubik", sans-serif;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(34, 50, 40, 0.04);
+}
+.product-select__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.product-select__item img {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.product-select__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  box-shadow: 0 10px 32px rgba(16, 24, 32, 0.12);
+  border-radius: 12px;
+  z-index: 40;
+  max-height: 300px;
+  overflow: auto;
+  padding: 8px;
+}
+.product-select__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.product-select__option img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.product-select__option:hover {
+  background: #f3f7f3;
+}
+.product-select__meta {
+  display: flex;
+  flex-direction: column;
+}
+.product-select__price {
+  color: #4a6b59;
+  font-weight: 700;
+}
+
 .list-menu button {
   margin: 6px auto 0 auto;
   padding: 12px;
@@ -242,10 +335,4 @@ li {
 .list-menu button:disabled {
   opacity: 0.7;
   cursor: default;
-}
-
-@media screen and (max-width: 1150px) {
-  .banner {
-    margin-top: 4vh;
-  }
 }
