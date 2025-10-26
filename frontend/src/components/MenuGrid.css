@@ -41,6 +41,7 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
   transition: transform 0.28s ease;
   min-height: 140px; /* ensure a visible height even if images fail to load */
+  position: relative;
 }
 
 .menu-card__img {

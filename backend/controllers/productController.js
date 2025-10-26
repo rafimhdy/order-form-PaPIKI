@@ -6,7 +6,7 @@ exports.createProduct = async (req, res) => {
       name,
       price = 10000,
       description = "",
-      available = true,
+      stock = 100,
       image = "",
       slug,
     } = req.body;
@@ -20,7 +20,7 @@ exports.createProduct = async (req, res) => {
       slug: finalSlug,
       price,
       description,
-      available,
+      stock,
       image,
     });
     await p.save();

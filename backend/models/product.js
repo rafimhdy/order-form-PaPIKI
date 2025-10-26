@@ -14,7 +14,7 @@ const ProductSchema = new mongoose.Schema(
     price: { type: Number, required: true, default: 10000, min: 0 },
     description: { type: String, default: "" },
     image: { type: String, default: "" },
-    available: { type: Boolean, default: true },
+    stock: { type: Number, default: 100, min: 0 },
   },
   { timestamps: true }
 );

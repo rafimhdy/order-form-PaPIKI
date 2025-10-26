@@ -4,11 +4,9 @@ import StatusSelect from "./StatusSelect";
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState("orders");
-  const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editingUser, setEditingUser] = useState(null);
   const [showOrderDetails, setShowOrderDetails] = useState(null);
   const [products, setProducts] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -19,6 +17,49 @@ export default function AdminDashboard() {
   const [authUser, setAuthUser] = useState(null);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+
+  // Search states
+  const [ordersSearch, setOrdersSearch] = useState("");
+  const [productsSearch, setProductsSearch] = useState("");
+
+  // Filtered data
+  const filteredOrders = React.useMemo(() => {
+    if (!ordersSearch.trim()) return orders;
+    const query = ordersSearch.toLowerCase();
+    return orders.filter((order) => {
+      const customerName = (order.customerName || "").toLowerCase();
+      const userName = (order.user?.name || "").toLowerCase();
+      const itemsText =
+        order.items
+          ?.map((it) => it.name)
+          .join(" ")
+          .toLowerCase() || "";
+      const status = (order.status || "").toLowerCase();
+
+      return (
+        customerName.includes(query) ||
+        userName.includes(query) ||
+        itemsText.includes(query) ||
+        status.includes(query)
+      );
+    });
+  }, [orders, ordersSearch]);
+
+  const filteredProducts = React.useMemo(() => {
+    if (!productsSearch.trim()) return products;
+    const query = productsSearch.toLowerCase();
+    return products.filter((product) => {
+      const name = (product.name || "").toLowerCase();
+      const slug = (product.slug || "").toLowerCase();
+      const description = (product.description || "").toLowerCase();
+
+      return (
+        name.includes(query) ||
+        slug.includes(query) ||
+        description.includes(query)
+      );
+    });
+  }, [products, productsSearch]);
 
   // NOTE: the effect that reacts to `tab` must be declared after the
   // loadUsers/loadOrders/loadProducts functions to avoid referencing
@@ -89,84 +130,9 @@ export default function AdminDashboard() {
     setAuthUser(null);
   }
 
-  const loadUsers = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    if (!authUser) {
-      // don't try to call admin endpoints when not authenticated
-      setUsers([]);
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await fetch("/api/users", { headers: authHeaders(false) });
-      const text = await res.text();
-      if (!res.ok)
-        throw new Error(text || res.statusText || "Failed to load users");
-      let json = [];
-      try {
-        json = text ? JSON.parse(text) : [];
-      } catch {
-        json = [];
-      }
-      setUsers(Array.isArray(json) ? json : []);
-    } catch (err) {
-      setError(err.message || String(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [authHeaders, authUser]);
-
   function handleLoginSubmit(e) {
     e.preventDefault();
     loginAdmin();
-  }
-
-  async function createUser(payload) {
-    setError(null);
-    try {
-      const res = await fetch("/api/users", {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      await loadUsers();
-      setEditingUser(null);
-    } catch (err) {
-      setError(err.message || String(err));
-    }
-  }
-
-  async function updateUser(id, payload) {
-    setError(null);
-    try {
-      const res = await fetch(`/api/users/${id}`, {
-        method: "PUT",
-        headers: authHeaders(),
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      await loadUsers();
-      setEditingUser(null);
-    } catch (err) {
-      setError(err.message || String(err));
-    }
-  }
-
-  async function removeUser(id) {
-    if (!confirm("Hapus user ini?")) return;
-    setError(null);
-    try {
-      const res = await fetch(`/api/users/${id}`, {
-        method: "DELETE",
-        headers: authHeaders(false),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      await loadUsers();
-    } catch (err) {
-      setError(err.message || String(err));
-    }
   }
 
   const loadOrders = React.useCallback(async () => {
@@ -248,10 +214,9 @@ export default function AdminDashboard() {
 
   // run loader when tab changes (loaders declared above)
   useEffect(() => {
-    if (tab === "users") loadUsers();
-    else if (tab === "orders") loadOrders();
+    if (tab === "orders") loadOrders();
     else if (tab === "products") loadProducts();
-  }, [tab, loadUsers, loadOrders, loadProducts]);
+  }, [tab, loadOrders, loadProducts]);
 
   async function createProduct(payload) {
     setError(null);
@@ -314,12 +279,6 @@ export default function AdminDashboard() {
                 Orders
               </button>
               <button
-                className={tab === "users" ? "active" : ""}
-                onClick={() => setTab("users")}
-              >
-                Users
-              </button>
-              <button
                 className={tab === "products" ? "active" : ""}
                 onClick={() => setTab("products")}
               >
@@ -334,7 +293,6 @@ export default function AdminDashboard() {
               aria-label="Pilih tab admin"
             >
               <option value="orders">Orders</option>
-              <option value="users">Users</option>
               <option value="products">Products</option>
             </select>
             <div className="admin__user">
@@ -390,90 +348,21 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {token && tab === "users" && (
-          <section>
-            <div className="admin__toolbar">
-              <button onClick={() => setEditingUser({ name: "", email: "" })}>
-                Tambah User
-              </button>
-              <button onClick={loadUsers}>Refresh</button>
-            </div>
-
-            {editingUser && (
-              <div className="admin__form">
-                <label>Nama</label>
-                <input
-                  value={editingUser.name}
-                  onChange={(e) =>
-                    setEditingUser({ ...editingUser, name: e.target.value })
-                  }
-                />
-                <label>Email</label>
-                <input
-                  value={editingUser.email}
-                  onChange={(e) =>
-                    setEditingUser({ ...editingUser, email: e.target.value })
-                  }
-                />
-                <div className="admin__form-actions">
-                  <button
-                    onClick={() =>
-                      editingUser._id
-                        ? updateUser(editingUser._id, editingUser)
-                        : createUser(editingUser)
-                    }
-                  >
-                    Simpan
-                  </button>
-                  <button onClick={() => setEditingUser(null)}>Batal</button>
-                </div>
-              </div>
-            )}
-
-            <div className="admin__table-wrap">
-              <table className="admin__table">
-                <thead>
-                  <tr>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>Dibuat</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u._id}>
-                      <td data-label="Nama">{u.name}</td>
-                      <td data-label="Email">{u.email}</td>
-                      <td data-label="Dibuat">
-                        {new Date(u.createdAt).toLocaleString()}
-                      </td>
-                      <td data-label="Aksi">
-                        <button
-                          onClick={() => setEditingUser(u)}
-                          aria-label={`Edit ${u.name}`}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => removeUser(u._id)}
-                          aria-label={`Hapus ${u.name}`}
-                        >
-                          Hapus
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
         {token && tab === "orders" && (
           <section>
             <div className="admin__toolbar">
-              <button onClick={loadOrders}>Refresh</button>
+              <div className="admin__search">
+                <input
+                  type="text"
+                  placeholder="Cari orders (nama customer, produk, status)..."
+                  value={ordersSearch}
+                  onChange={(e) => setOrdersSearch(e.target.value)}
+                  className="admin__search-input"
+                />
+              </div>
+              <div className="admin__toolbar-actions">
+                <button onClick={loadOrders}>Refresh</button>
+              </div>
             </div>
 
             <div className="admin__table-wrap">
@@ -490,7 +379,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((o, idx) => (
+                  {filteredOrders.map((o, idx) => (
                     <tr key={o._id}>
                       <td data-label="#">{idx + 1}</td>
                       <td data-label="Customer">
@@ -585,20 +474,31 @@ export default function AdminDashboard() {
         {token && tab === "products" && (
           <section>
             <div className="admin__toolbar">
-              <button
-                onClick={() =>
-                  setEditingProduct({
-                    name: "",
-                    slug: "",
-                    price: 10000,
-                    image: "",
-                    available: true,
-                  })
-                }
-              >
-                Tambah Product
-              </button>
-              <button onClick={loadProducts}>Refresh</button>
+              <div className="admin__search">
+                <input
+                  type="text"
+                  placeholder="Cari produk (nama, slug, deskripsi)..."
+                  value={productsSearch}
+                  onChange={(e) => setProductsSearch(e.target.value)}
+                  className="admin__search-input"
+                />
+              </div>
+              <div className="admin__toolbar-actions">
+                <button
+                  onClick={() =>
+                    setEditingProduct({
+                      name: "",
+                      slug: "",
+                      price: 10000,
+                      image: "",
+                      stock: 100,
+                    })
+                  }
+                >
+                  Tambah Product
+                </button>
+                <button onClick={loadProducts}>Refresh</button>
+              </div>
             </div>
 
             {editingProduct && (
@@ -644,19 +544,17 @@ export default function AdminDashboard() {
                     })
                   }
                 />
-                <label>Avaliable</label>
-                <select
-                  value={editingProduct.available ? "1" : "0"}
+                <label>Stock</label>
+                <input
+                  type="number"
+                  value={editingProduct.stock}
                   onChange={(e) =>
                     setEditingProduct({
                       ...editingProduct,
-                      available: e.target.value === "1",
+                      stock: Number(e.target.value),
                     })
                   }
-                >
-                  <option value="1">Yes</option>
-                  <option value="0">No</option>
-                </select>
+                />
                 <div className="admin__form-actions">
                   <button
                     onClick={() =>
@@ -680,11 +578,12 @@ export default function AdminDashboard() {
                     <th>Nama</th>
                     <th>Slug</th>
                     <th>Harga</th>
+                    <th>Stock</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((p) => (
+                  {filteredProducts.map((p) => (
                     <tr key={p._id}>
                       <td data-label="Image" style={{ width: 120 }}>
                         <img
@@ -698,6 +597,7 @@ export default function AdminDashboard() {
                       <td data-label="Harga">
                         Rp {Number(p.price).toLocaleString()}
                       </td>
+                      <td data-label="Stock">{p.stock}</td>
                       <td data-label="Aksi">
                         <button
                           onClick={() => setEditingProduct(p)}

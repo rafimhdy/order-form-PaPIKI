@@ -111,6 +111,8 @@
   display: flex;
   gap: 8px;
   margin-bottom: 14px;
+  justify-content: space-between;
+  align-items: center;
 }
 .admin__toolbar button {
   padding: 8px 12px;
@@ -119,6 +121,27 @@
   background: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   font-family: "Rubik", sans-serif;
+}
+.admin__toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+.admin__search {
+  flex: 1;
+  max-width: 300px;
+}
+.admin__search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6ece6;
+  font-family: "Rubik", sans-serif;
+  font-size: 14px;
+}
+.admin__search-input:focus {
+  outline: none;
+  border-color: var(--accent, #2f6b5b);
+  box-shadow: 0 0 0 2px rgba(47, 107, 91, 0.1);
 }
 .admin__form {
   background: #fff;

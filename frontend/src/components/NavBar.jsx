@@ -51,7 +51,11 @@ export default function NavBar() {
             </li>
 
             <li className="nav__item">
-              <a href="#" className="nav__link" onClick={() => setOpen(false)}>
+              <a
+                href="#produk"
+                className="nav__link"
+                onClick={() => setOpen(false)}
+              >
                 <i className="ri-arrow-right-up-line"></i>
                 <span>Produk</span>
               </a>
@@ -68,7 +72,7 @@ export default function NavBar() {
 
           <div className="nav__social">
             <a
-              href="https://www.instagram.com/mrafimahdy"
+              href="https://www.instagram.com/papiki.official"
               target="_blank"
               rel="noreferrer"
               className="nav__social-link"
