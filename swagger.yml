@@ -1,17 +1,59 @@
 openapi: "3.0.3"
 info:
-  title: API Title
-  version: "1.0"
+  title: Kopi Tubruk Store API
+  version: "1.0.0"
+  description: |
+    REST API untuk sistem pemesanan kopi online (Kopi Tubruk Premium Store).
+
+    API ini mendukung 3 mode pemesanan yang berbeda tergantung jenis klien
+    (guest checkout, form sederhana, atau aplikasi terdaftar), serta
+    terintegrasi dengan **bot notifikasi Telegram** yang otomatis mengirim
+    pesan ke admin toko setiap kali ada pesanan baru yang berhasil dibuat.
+
+    ## Changelog
+    | Versi | Tanggal | Perubahan |
+    |-------|---------|-----------|
+    | 1.0.0 | 2026-06-14 | Initial release: Orders, Users, Products endpoints |
+
+  contact:
+    name: Muhammad Rafi Mahdy
+    email: hello@mrafimahdy.works
+
 servers:
   - url: http://localhost:4000/api
     description: Server Lokal (Development)
+
+tags:
+  - name: Orders
+    description: Manajemen pesanan, termasuk 3 mode pembuatan pesanan dan integrasi notifikasi Telegram.
+  - name: Users
+    description: Manajemen akun user dan admin.
+  - name: Products
+    description: Manajemen katalog produk dan stok gudang.
+
 paths:
   /orders:
     post:
       tags:
         - Orders
       summary: Membuat pesanan baru (Public)
-      description: Mendukung 3 mode pengiriman data (Cart Checkout, Single Form, atau Registered API Mode). Pesanan yang berhasil akan memicu notifikasi bot Telegram ke pihak internal toko.
+      description: |
+        Endpoint ini support **3 mode pengiriman data** yang berbeda,
+        tergantung jenis klien yang melakukan request. Pilih schema yang
+        sesuai dengan kebutuhan:
+
+        | Mode | Kapan Digunakan | Autentikasi |
+        |------|------------------|-------------|
+        | **Mode 1 Cart Checkout** | Pengunjung guest yang checkout langsung dari keranjang belanja, tanpa perlu login. | Tidak perlu |
+        | **Mode 2 Single Frontend Form** | Form pemesanan sederhana satu produk, biasanya dari landing page promosi. | Tidak perlu |
+        | **Mode 3 Registered API Mode** | Klien eksternal atau aplikasi mobile yang mengelola user terdaftar sendiri. | Membutuhkan `user` ID yang valid |
+
+        ### Side Effect: Notifikasi Telegram
+        Setiap pesanan yang **berhasil dibuat** (response `201`) akan otomatis
+        memicu pengiriman notifikasi ke **bot Telegram internal toko**, berisi
+        ringkasan detail pesanan. Proses ini berjalan secara asynchronous di
+        background dan tidak akan menggagalkan response API meskipun notifikasi
+        Telegram gagal terkirim (misal karena bot token invalid atau timeout).
       requestBody:
         required: true
         content:
@@ -23,7 +65,7 @@ paths:
                 - $ref: "#/components/schemas/OrderAPIRequest"
       responses:
         "201":
-          description: Pesanan berhasil dibuat
+          description: Pesanan berhasil dibuat dan notifikasi Telegram telah dikirim ke admin.
           content:
             application/json:
               schema:
@@ -36,35 +78,69 @@ paths:
                     type: string
                     example: "64f1c7a3c4d5e6f7a8b9c0f5"
         "400":
-          description: Bad Request (Stok tidak cukup atau produk tidak ditemukan)
+          description: Bad Request — stok tidak cukup atau produk tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Stok produk tidak cukup."
         "422":
-          description: Dokumen gagal divalidasi oleh sistem database (Schema Validation Error)
+          description: Dokumen gagal divalidasi oleh sistem database (Schema Validation Error).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Field 'items' wajib diisi."
 
     get:
       tags:
         - Orders
       summary: Mendapatkan semua daftar pesanan (Admin Only)
+      description: |
+        Mengembalikan seluruh data pesanan yang tersimpan di sistem.
+
+        **Catatan:** Endpoint ini belum mengimplementasikan pagination.
+        Untuk volume data besar, seluruh hasil akan dikembalikan dalam satu
+        response, gunakan parameter filter di bawah untuk mempersempit hasil.
       security:
         - BearerAuth: []
       parameters:
         - name: user
           in: query
           required: false
-          description: Filter berdasarkan ID User tertentu
+          description: Filter berdasarkan ID User tertentu.
           schema:
             type: string
         - name: status
           in: query
           required: false
-          description: Filter berdasarkan status pesanan (pending, shipped, cancelled)
+          description: Filter berdasarkan status pesanan.
           schema:
             type: string
             enum: [pending, shipped, cancelled]
       responses:
         "200":
-          description: Berhasil mengambil daftar pesanan
+          description: Berhasil mengambil daftar pesanan.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponse"
         "401":
-          description: Unauthorized
+          description: Unauthorized — token tidak valid atau tidak disertakan.
 
   /orders/{id}:
     get:
@@ -77,19 +153,30 @@ paths:
         - name: id
           in: path
           required: true
+          description: ID unik pesanan (MongoDB ObjectId).
           schema:
             type: string
       responses:
         "200":
-          description: Data pesanan ditemukan
+          description: Data pesanan ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
         "404":
-          description: Pesanan tidak ditemukan
+          description: Pesanan tidak ditemukan.
 
     put:
       tags:
         - Orders
       summary: Memperbarui status atau item pesanan (Admin Only)
-      description: Mengubah status pesanan. Mengubah status ke 'shipped' atau 'cancelled' akan otomatis memotong atau mengembalikan jumlah stok produk terkait di gudang.
+      description: |
+        Mengubah status pesanan. Perubahan status memiliki **efek otomatis**
+        terhadap stok produk terkait di gudang:
+
+        - Status diubah ke **`shipped`** → stok produk otomatis **dipotong**.
+        - Status diubah ke **`cancelled`** → stok produk otomatis **dikembalikan**.
+        - Status **`pending`** → tidak ada perubahan stok.
       security:
         - BearerAuth: []
       parameters:
@@ -111,12 +198,23 @@ paths:
                   example: "shipped"
       responses:
         "200":
-          description: Pesanan berhasil diperbarui
+          description: Pesanan berhasil diperbarui dan stok produk telah disesuaikan.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "404":
+          description: Pesanan tidak ditemukan.
 
     delete:
       tags:
         - Orders
       summary: Menghapus pesanan dari sistem (Admin Only)
+      description: |
+        **Perhatian:** Endpoint ini menghapus data pesanan secara permanen
+        dan **tidak** mengembalikan stok produk yang sudah dipotong sebelumnya.
+        Gunakan status `cancelled` melalui endpoint PUT jika tujuannya adalah
+        membatalkan pesanan dan mengembalikan stok.
       security:
         - BearerAuth: []
       parameters:
@@ -127,18 +225,25 @@ paths:
             type: string
       responses:
         "200":
-          description: Pesanan berhasil dihapus
+          description: Pesanan berhasil dihapus.
+        "404":
+          description: Pesanan tidak ditemukan.
+
   /users:
     get:
       tags:
         - Users
-      summary: Mendapatkan semua daftar user
-      description: Mengembalikan seluruh data user yang terdaftar di sistem. Membutuhkan hak akses Admin.
+      summary: Mendapatkan semua daftar user (Admin Only)
+      description: |
+        Mengembalikan seluruh data user yang terdaftar di sistem.
+
+        **Catatan:** Endpoint ini belum mengimplementasikan pagination.
+        Disarankan hanya digunakan untuk volume data kecil hingga menengah.
       security:
         - BearerAuth: []
       responses:
         "200":
-          description: Berhasil mengambil daftar user
+          description: Berhasil mengambil daftar user.
           content:
             application/json:
               schema:
@@ -146,15 +251,15 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserResponse"
         "401":
-          description: Unauthorized
+          description: Unauthorized.
         "500":
-          description: Server error
+          description: Server error.
 
     post:
       tags:
         - Users
-      summary: Membuat user baru
-      description: Mendaftarkan user atau admin baru ke dalam sistem. Membutuhkan hak akses Admin.
+      summary: Membuat user baru (Admin Only)
+      description: Mendaftarkan user atau admin baru ke dalam sistem.
       security:
         - BearerAuth: []
       requestBody:
@@ -165,15 +270,15 @@ paths:
               $ref: "#/components/schemas/UserRequest"
       responses:
         "201":
-          description: User berhasil dibuat
+          description: User berhasil dibuat.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponse"
         "400":
-          description: Input tidak lengkap (name dan email wajib)
+          description: Input tidak lengkap, field `name` dan `email` wajib diisi.
         "409":
-          description: Email sudah terdaftar
+          description: Email sudah terdaftar.
 
   /users/{id}:
     get:
@@ -186,20 +291,20 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID unik user
+          description: ID unik user (MongoDB ObjectId).
           schema:
             type: string
       responses:
         "200":
-          description: User ditemukan
+          description: User ditemukan.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponse"
         "400":
-          description: Format ID tidak valid
+          description: Format ID tidak valid.
         "404":
-          description: User tidak ditemukan
+          description: User tidak ditemukan.
 
     put:
       tags:
@@ -221,17 +326,17 @@ paths:
               $ref: "#/components/schemas/UserRequest"
       responses:
         "200":
-          description: Data user berhasil diperbarui
+          description: Data user berhasil diperbarui.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponse"
         "400":
-          description: Format ID atau data tidak valid
+          description: Format ID atau data tidak valid.
         "404":
-          description: User tidak ditemukan
+          description: User tidak ditemukan.
         "409":
-          description: Email baru sudah digunakan orang lain
+          description: Email baru sudah digunakan orang lain.
 
     delete:
       tags:
@@ -247,21 +352,26 @@ paths:
             type: string
       responses:
         "200":
-          description: User berhasil dihapus
+          description: User berhasil dihapus.
         "400":
-          description: Format ID tidak valid
+          description: Format ID tidak valid.
         "404":
-          description: User tidak ditemukan
+          description: User tidak ditemukan.
 
   /products:
     get:
       tags:
         - Products
-      summary: Mendapatkan semua katalog produk
-      description: Mengembalikan daftar seluruh produk yang tersedia di gudang/database.
+      summary: Mendapatkan semua katalog produk (Public)
+      description: |
+        Mengembalikan daftar seluruh produk yang tersedia di gudang/database.
+
+        **Catatan:** Endpoint ini belum mengimplementasikan pagination.
+        Untuk katalog dengan jumlah produk besar, pertimbangkan penggunaan
+        parameter filter di versi API selanjutnya.
       responses:
         "200":
-          description: Berhasil mengambil data produk
+          description: Berhasil mengambil data produk.
           content:
             application/json:
               schema:
@@ -269,13 +379,12 @@ paths:
                 items:
                   $ref: "#/components/schemas/Product"
         "500":
-          description: Server bermasalah
+          description: Server bermasalah.
 
     post:
       tags:
         - Products
-      summary: Menambahkan produk baru ke database
-      description: Membuat entri produk baru. Membutuhkan hak akses Admin.
+      summary: Menambahkan produk baru ke database (Admin Only)
       security:
         - BearerAuth: []
       requestBody:
@@ -286,35 +395,44 @@ paths:
               $ref: "#/components/schemas/Product"
       responses:
         "201":
-          description: Produk berhasil dibuat
+          description: Produk berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
         "401":
-          description: Unauthorized. Token tidak valid atau tidak disertakan.
+          description: Unauthorized — token tidak valid atau tidak disertakan.
         "400":
-          description: Data tidak valid
+          description: Data tidak valid.
         "500":
-          description: Server bermasalah
+          description: Server bermasalah.
 
   /products/{id}:
     get:
       tags:
         - Products
-      summary: Mendapatkan detail satu produk spesifik
+      summary: Mendapatkan detail satu produk spesifik (Public)
       parameters:
         - name: id
           in: path
           required: true
+          description: ID unik produk (MongoDB ObjectId).
           schema:
             type: string
       responses:
         "200":
-          description: Produk ditemukan
+          description: Produk ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
         "404":
-          description: Produk tidak ditemukan
+          description: Produk tidak ditemukan.
 
     put:
       tags:
         - Products
-      summary: Memperbarui data produk
+      summary: Memperbarui data produk (Admin Only)
       security:
         - BearerAuth: []
       parameters:
@@ -331,12 +449,18 @@ paths:
               $ref: "#/components/schemas/Product"
       responses:
         "200":
-          description: Produk berhasil diperbarui
+          description: Produk berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Produk tidak ditemukan.
 
     delete:
       tags:
         - Products
-      summary: Menghapus produk
+      summary: Menghapus produk (Admin Only)
       security:
         - BearerAuth: []
       parameters:
@@ -347,7 +471,9 @@ paths:
             type: string
       responses:
         "200":
-          description: Produk berhasil dihapus
+          description: Produk berhasil dihapus.
+        "404":
+          description: Produk tidak ditemukan.
 
 components:
   securitySchemes:
@@ -355,6 +481,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        Token JWT yang didapat setelah proses login admin. Sertakan di header:
+        `Authorization: Bearer {token}`
+
   schemas:
     OrderItem:
       type: object
@@ -371,6 +501,7 @@ components:
 
     OrderCartRequest:
       title: Mode 1 - Cart Checkout (Anonymous)
+      description: Digunakan untuk guest checkout dari keranjang belanja, tanpa memerlukan login.
       type: object
       required:
         - items
@@ -385,6 +516,7 @@ components:
 
     OrderFormRequest:
       title: Mode 2 - Single Frontend Form
+      description: Digunakan untuk form pemesanan satu produk sederhana, biasanya dari landing page promosi.
       type: object
       required:
         - coffee_type
@@ -394,7 +526,7 @@ components:
           example: "Salma"
         coffee_type:
           type: string
-          description: Menggunakan slug atau kemiripan nama produk
+          description: Menggunakan slug atau nama produk yang mendekati.
           example: "kopitubrukpremium"
         quantity:
           type: integer
@@ -402,6 +534,7 @@ components:
 
     OrderAPIRequest:
       title: Mode 3 - Registered API Mode
+      description: Digunakan oleh klien eksternal atau aplikasi yang sudah mengelola data user terdaftar sendiri.
       type: object
       required:
         - user
@@ -409,7 +542,7 @@ components:
       properties:
         user:
           type: string
-          description: ID User berwujud ObjectId MongoDB yang sah
+          description: ID User berwujud ObjectId MongoDB yang sah dan sudah terdaftar di sistem.
           example: "64f1b5e9c4d5e6f7a8b9c0e2"
         status:
           type: string
@@ -419,6 +552,33 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderItem"
+
+    OrderResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "64f1c7a3c4d5e6f7a8b9c0f5"
+        name:
+          type: string
+          example: "Rafi Guest"
+        user:
+          type: string
+          nullable: true
+          example: "64f1b5e9c4d5e6f7a8b9c0e2"
+        status:
+          type: string
+          enum: [pending, shipped, cancelled]
+          example: "pending"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-06-14T10:30:00.000Z"
+
     UserRequest:
       type: object
       required:
